@@ -2,11 +2,19 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
 import CodeScreen from './screens/CodeScreen';
 import MainScreen from './screens/MainScreen';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
 
+const Stack = createStackNavigator();
 
 export default function App() {
   return (
-    <CodeScreen/>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="CodeScreen">
+        <Stack.Screen name="CodeScreen" component={CodeScreen} options={{ headerShown: false }}  />
+        <Stack.Screen name="MainScreen" component={MainScreen} options={{ headerShown: false }} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 

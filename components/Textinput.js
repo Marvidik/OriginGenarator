@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
 
-const BeautifulTextInput = ({text}) => {
+const BeautifulTextInput = ({ text, onChangeText }) => {
   const [inputValue, setInputValue] = useState('');
+
+  const handleInputChange = (text) => {
+    setInputValue(text);
+    if (onChangeText) {
+      onChangeText(text); // Call the passed function to update the parent state
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -11,7 +18,7 @@ const BeautifulTextInput = ({text}) => {
         placeholder={text}
         placeholderTextColor="#999"
         value={inputValue}
-        onChangeText={text => setInputValue(text)}
+        onChangeText={handleInputChange}
         keyboardType="default"
         returnKeyType="done"
       />
@@ -24,8 +31,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
-    width:"85%",
-    alignSelf:"center"
+    width: "85%",
+    alignSelf: "center"
   },
   input: {
     width: '100%',

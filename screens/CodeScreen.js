@@ -3,13 +3,13 @@ import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import BeautifulTextInput from '../components/Textinput';
 import BeautifulButton from '../components/Button';
 
-export default function CodeScreen() {
+export default function CodeScreen({navigation}) {
   const [modalVisible, setModalVisible] = useState(false);
 
   return (
     <View style={styles.component}>
       <BeautifulTextInput text={"Enter Confirmation Code"}  styles1={styles.b1}/>
-      <BeautifulButton title={"Confirm"} />
+      <BeautifulButton title={"Confirm"} onPress={() => navigation.navigate('MainScreen')}/>
 
       {/* Make Payment Button */}
       <TouchableOpacity onPress={() => setModalVisible(true)}>

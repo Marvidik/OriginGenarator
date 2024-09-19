@@ -1,9 +1,23 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 
-const TwoTextFields = () => {
+const TwoTextFields = ({ onCountryCodeChange, onPhoneNumberChange }) => {
   const [countryCode, setCountryCode] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+
+  // Update country code and pass it to parent component as a number
+  const handleCountryCodeChange = (text) => {
+    const cleanedCode = text.replace(/\D/, ''); // Allows only numbers
+    setCountryCode(cleanedCode);
+    onCountryCodeChange(Number(cleanedCode) || 0); // Convert to number and pass to parent
+  };
+
+  // Update phone number and pass it to parent component as a number
+  const handlePhoneNumberChange = (text) => {
+    const cleanedNumber = text.replace(/\D/, ''); // Allows only numbers
+    setPhoneNumber(cleanedNumber);
+    onPhoneNumberChange(Number(cleanedNumber) || 0); // Convert to number and pass to parent
+  };
 
   return (
     <View style={styles.container}>
@@ -16,8 +30,8 @@ const TwoTextFields = () => {
           placeholderTextColor="#999"
           keyboardType="phone-pad"
           value={countryCode}
-          onChangeText={text => setCountryCode(text.replace(/\D/, ''))} // Allows only numbers
-          maxLength={3} // Limits input to 3 digits (e.g., +1, +44, etc.)
+          onChangeText={handleCountryCodeChange}
+          maxLength={3} // Limits input to 3 digits
         />
       </View>
 
@@ -28,7 +42,7 @@ const TwoTextFields = () => {
         placeholderTextColor="#999"
         keyboardType="phone-pad"
         value={phoneNumber}
-        onChangeText={text => setPhoneNumber(text.replace(/\D/, ''))} // Allows only numbers
+        onChangeText={handlePhoneNumberChange}
       />
     </View>
   );
@@ -36,14 +50,14 @@ const TwoTextFields = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row', // Aligns the two text inputs horizontally
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 20,
-    marginBottom:20
+    marginBottom: 20
   },
   countryCodeContainer: {
-    flexDirection: 'row', // Aligns the plus sign and country code input horizontally
+    flexDirection: 'row',
     alignItems: 'center',
     width: '25%',
     height: 50,
@@ -62,7 +76,7 @@ const styles = StyleSheet.create({
   plusSign: {
     fontSize: 18,
     color: '#333',
-    paddingRight: 5, // Adds spacing between the plus sign and the input field
+    paddingRight: 5,
   },
   countryCodeInput: {
     flex: 1,
