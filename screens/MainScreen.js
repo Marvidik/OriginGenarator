@@ -6,7 +6,7 @@ import BeautifulButton from '../components/Button';
 import * as Contacts from 'expo-contacts';
 import { MaterialIcons } from '@expo/vector-icons';
 
-export default function MainScreen() {
+export default function MainScreen({navigation}) {
   const [countryCode, setCountryCode] = useState('');
   const [baseNumber, setBaseNumber] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -58,6 +58,7 @@ export default function MainScreen() {
     <View style={styles.container}>
       <View style={styles.up}></View>
       <Text style={styles.text1}>Enter Country Code and Phone Number...</Text>
+      <BeautifulButton style={styles.fill} title={"Get Random"}  />
       <TwoTextFields 
         onCountryCodeChange={(text) => setCountryCode(text)} 
         onPhoneNumberChange={(text) => setBaseNumber(text)} 
@@ -71,6 +72,9 @@ export default function MainScreen() {
       <TouchableOpacity style={styles.deleteButton} onPress={() => console.log("Deleted")}>
         <MaterialIcons name="delete" size={24} color="#C04000" />
         <Text style={styles.delete}>Delete Previous Contacts</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.more} onPress={() => navigation.navigate('NumberScreen')}>
+        <Text style={styles.moretext}>Get More Samples Numbers</Text>
       </TouchableOpacity>
     </View>
   )
@@ -106,4 +110,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: "center"
   },
+  fill:{
+    right:"30%",
+    height:50,
+    width:150
+  },
+  more:{
+    top:"25%"
+  },
+  moretext:{
+    marginLeft: 15,
+    color: '#C04000',
+    fontSize: 28,
+  }
 });
