@@ -1,10 +1,11 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert ,Platform} from 'react-native';
 import React, { useState } from 'react';
 import TwoTextFields from '../components/Countryphone';
 import BeautifulTextInput from '../components/Textinput';
 import BeautifulButton from '../components/Button';
 import * as Contacts from 'expo-contacts';
 import { MaterialIcons } from '@expo/vector-icons';
+import * as Permissions from 'expo-permissions';
 
 export default function MainScreen({navigation}) {
   const [countryCode, setCountryCode] = useState('');
@@ -17,42 +18,49 @@ export default function MainScreen({navigation}) {
 
   const handleGenerateContacts = async () => {
     const totalContacts = parseInt(quantity);
+  
+    // Validate input
     if (!isNumeric(countryCode) || !isNumeric(baseNumber) || isNaN(totalContacts) || totalContacts < 1) {
       Alert.alert('Error', 'Please enter valid numeric inputs.');
-      console.log('Country Code:', countryCode);
-      console.log('Base Number:', baseNumber);
-      console.log('Quantity:', quantity);
       return;
     }
   
-    // Request permission to access contacts
-    const { status: readStatus } = await Contacts.requestPermissionsAsync();
-    const { status: writeStatus } = await Contacts.requestPermissionsAsync();
+    // Request permission for contacts
+    const { status } = await Contacts.requestPermissionsAsync();
     
-    if (readStatus !== 'granted' || writeStatus !== 'granted') {
-      Alert.alert('Permission Denied', 'You need to grant contact access.');
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'You need to grant contacts access.');
       return;
     }
   
-    // Generate contacts
-    for (let i = 0; i < totalContacts; i++) {
-      let phoneNumber = `${countryCode}${parseInt(baseNumber) + i}`;
-      const contact = {
-        [Contacts.Fields.FirstName]: `Contact ${i + 1}`,
-        [Contacts.Fields.PhoneNumbers]: [{ number: phoneNumber, isPrimary: true, label: 'mobile' }],
-      };
-  
-      try {
-        await Contacts.addContactAsync(contact);
-      } catch (error) {
-        Alert.alert('Error', `Failed to save contact ${i + 1}: ${error.message}`);
-        break;
+    // Check if it's Android, request write permission specifically
+    if (Platform.OS === 'android') {
+      const { status: writeStatus } = await Contacts.requestPermissionsAsync();
+      if (writeStatus !== 'granted') {
+        Alert.alert('Permission Denied', 'Write permission for contacts is required.');
+        return;
       }
     }
   
-    Alert.alert('Success', `${quantity} contacts created successfully!`);
-  };
+    try {
+      // Generate contacts
+      for (let i = 0; i < totalContacts; i++) {
+        let phoneNumber = `${countryCode}${parseInt(baseNumber) + i}`;
   
+        const contact = {
+          [Contacts.Fields.FirstName]: `Contact ${i + 1}`,
+          [Contacts.Fields.PhoneNumbers]: [{ number: phoneNumber, isPrimary: true, label: 'mobile' }],
+        };
+  
+        // Save the contact
+        await Contacts.addContactAsync(contact);
+      }
+  
+      Alert.alert('Success', `${totalContacts} contacts created successfully!`);
+    } catch (error) {
+      Alert.alert('Error', `Failed to save contact: ${error.message}`);
+    }
+  };
 
   return (
     <View style={styles.container}>

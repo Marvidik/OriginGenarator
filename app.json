@@ -1,5 +1,8 @@
 {
   "expo": {
+    "plugins": [
+      "expo-contacts"
+    ],
     "name": "OriginGenarator",
     "slug": "OriginGenarator",
     "version": "1.0.0",
@@ -15,17 +18,25 @@
       "supportsTablet": true
     },
     "android": {
+      "permissions": [
+        "READ_CONTACTS",
+        "WRITE_CONTACTS",
+        "android.permission.READ_CONTACTS",
+        "android.permission.WRITE_CONTACTS"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": [
-        "READ_CONTACTS",
-        "WRITE_CONTACTS"
-      ]
+      "package": "com.hackerdev.OriginGenarator"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "87bd91e7-43f5-45bc-98db-18c355d3475f"
+      }
     }
   }
 }
