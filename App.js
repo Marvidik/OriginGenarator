@@ -6,11 +6,27 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import NumberScreen from './screens/NumberScreen';
 import L from './screens/L';
+import React, { useState,useEffect } from 'react';
+import * as Contacts from 'expo-contacts';
 
 
 const Stack = createStackNavigator();
 
+
 export default function App() {
+  useEffect(()=>{
+    const getPermission = async ()=>{
+      const {status}= await Contacts.requestPermissionsAsync();
+      if (status=="granted"){
+        console.log(status)
+          
+      }else{
+        console.log(status)
+      }
+    }
+    getPermission();
+  },[])
+  
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="CodeScreen">

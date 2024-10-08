@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, Alert ,Platform} from 'react-native';
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import TwoTextFields from '../components/Countryphone';
 import BeautifulTextInput from '../components/Textinput';
 import BeautifulButton from '../components/Button';
@@ -11,6 +11,9 @@ export default function MainScreen({navigation}) {
   const [countryCode, setCountryCode] = useState('');
   const [baseNumber, setBaseNumber] = useState('');
   const [quantity, setQuantity] = useState('');
+
+  
+
 
   const isNumeric = (value) => {
     return /^\d+$/.test(value); // Regular expression to check if a string contains only numbers
@@ -49,7 +52,7 @@ export default function MainScreen({navigation}) {
   
         const contact = {
           [Contacts.Fields.FirstName]: `Contact ${i + 1}`,
-          [Contacts.Fields.PhoneNumbers]: [{ number: phoneNumber, isPrimary: true, label: 'mobile' }],
+          [Contacts.Fields.PhoneNumbers]: [{ number: "08375647474", isPrimary: true, label: 'mobile' }],
         };
   
         // Save the contact
