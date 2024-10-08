@@ -5,7 +5,6 @@ import BeautifulTextInput from '../components/Textinput';
 import BeautifulButton from '../components/Button';
 import * as Contacts from 'expo-contacts';
 import { MaterialIcons } from '@expo/vector-icons';
-import * as Permissions from 'expo-permissions';
 
 export default function MainScreen({navigation}) {
   const [countryCode, setCountryCode] = useState('');
