@@ -38,7 +38,7 @@ export default function CodeScreen({ navigation }) {
 
       {/* Make Payment Button */}
       <TouchableOpacity onPress={() => setModalVisible(true)}>
-        <Text style={styles.payment}>Make Payment</Text>
+        {/* <Text style={styles.payment}>Make Payment</Text> */}
       </TouchableOpacity>
 
       {/* Modal Component */}

@@ -1,69 +1,60 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert ,Platform} from 'react-native';
-import React, { useState,useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
 import TwoTextFields from '../components/Countryphone';
 import BeautifulTextInput from '../components/Textinput';
 import BeautifulButton from '../components/Button';
 import * as Contacts from 'expo-contacts';
 import { MaterialIcons } from '@expo/vector-icons';
 
-export default function MainScreen({navigation}) {
+export default function MainScreen({ navigation }) {
   const [countryCode, setCountryCode] = useState('');
   const [baseNumber, setBaseNumber] = useState('');
   const [quantity, setQuantity] = useState('');
-  const[userName,setUser]=useState();
+  const [savedContactIds, setSavedContactIds] = useState([]); // Store generated contact IDs here
 
   async function fetchRandomUser() {
     try {
-      const response = await fetch('https://randomuser.me//api', {
+      const response = await fetch('https://randomuser.me/api', {
         method: 'GET',
         headers: {
-          'X-Api-Key': 'YOUR_API_KEY', // Replace with your actual API key
           'Content-Type': 'application/json',
         },
       });
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
-      const user = await response.json(); // Parse the JSON response
-      uss=user.results[0].name.first;
-      
-      setUser(uss);
-      
+
+      const data = await response.json();
+      const fetchedUserName = data.results[0].name.first;
+      return fetchedUserName;
     } catch (error) {
       console.error('Error fetching random user:', error);
+      return null;
     }
   }
-  
- 
-  
-
 
   const isNumeric = (value) => {
     return /^\d+$/.test(value); // Regular expression to check if a string contains only numbers
   };
 
   const handleGenerateContacts = async () => {
-    // Call the function to fetch and log the username
-    fetchRandomUser();
     const totalContacts = parseInt(quantity);
-  
+
     // Validate input
     if (!isNumeric(countryCode) || !isNumeric(baseNumber) || isNaN(totalContacts) || totalContacts < 1) {
       Alert.alert('Error', 'Please enter valid numeric inputs.');
       return;
     }
-  
+
     // Request permission for contacts
     const { status } = await Contacts.requestPermissionsAsync();
-    
+
     if (status !== 'granted') {
       Alert.alert('Permission Denied', 'You need to grant contacts access.');
       return;
     }
-  
-    // Check if it's Android, request write permission specifically
+
     if (Platform.OS === 'android') {
       const { status: writeStatus } = await Contacts.requestPermissionsAsync();
       if (writeStatus !== 'granted') {
@@ -71,50 +62,68 @@ export default function MainScreen({navigation}) {
         return;
       }
     }
-  
+
     try {
-      // Generate contacts
+      const generatedContactIds = [];
+
+      // Function to reshuffle the phone number
       function reshuffleNumber(baseNumber, countryCode) {
-        // Ensure baseNumber is a string in case it's passed as a number
         let baseNumberStr = baseNumber.toString();
-      
-        // Split the base number into two parts
-        const fixedPart = baseNumberStr.slice(0, 4); // Fixed first part (after country code)
-        const remainingPart = baseNumberStr.slice(4); // Remaining part to reshuffle
-      
-        // Convert remaining digits to an array
+
+        const fixedPart = baseNumberStr.slice(0, 4); 
+        const remainingPart = baseNumberStr.slice(4); 
+
         const remainingDigits = remainingPart.split('');
         
-        // Shuffle the remaining digits
         for (let i = remainingDigits.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [remainingDigits[i], remainingDigits[j]] = [remainingDigits[j], remainingDigits[i]];
         }
-      
-        // Join the reshuffled digits and return the new phone number
-        return `${countryCode}${fixedPart}${remainingDigits.join('')}`;
+
+        return `+${countryCode}${fixedPart}${remainingDigits.join('')}`;
       }
-      
+
       for (let i = 0; i < totalContacts; i++) {
-         
-        
-        // Generate a reshuffled phone number
         let phoneNumber = reshuffleNumber(baseNumber, countryCode);
-        // console.log(phoneNumber);
-        console.log(userName);
-      
-        // const contact = {
-        //   [Contacts.Fields.FirstName]: `{userName} ${i + 1}`,
-        //   [Contacts.Fields.PhoneNumbers]: [{ number: phoneNumber, isPrimary: true, label: 'mobile' }],
-        // };
-      
-        // // Save the contact
-        // await Contacts.addContactAsync(contact);
+        
+        // Fetch a new username for each contact
+        const userName = await fetchRandomUser();
+        
+        // Log phone number and userName to verify
+        console.log(`Contact ${i + 1}:`, { userName, phoneNumber });
+
+        const contact = {
+          [Contacts.Fields.FirstName]: `${userName}`,
+          [Contacts.Fields.PhoneNumbers]: [{ number: phoneNumber, isPrimary: true, label: 'mobile' }],
+        };
+        
+        // Save the contact and store its ID
+        const newContactId = await Contacts.addContactAsync(contact);
+        generatedContactIds.push(newContactId);
       }
-  
+
+      // Update the state to track saved contacts
+      setSavedContactIds(generatedContactIds);
+
       Alert.alert('Success', `${totalContacts} contacts created successfully!`);
     } catch (error) {
       Alert.alert('Error', `Failed to save contact: ${error.message}`);
+    }
+  };
+
+  const handleDeletePreviousContacts = async () => {
+    try {
+      // Loop through saved contact IDs and delete each contact
+      for (let contactId of savedContactIds) {
+        await Contacts.removeContactAsync(contactId);
+      }
+
+      // Clear saved contact IDs
+      setSavedContactIds([]);
+
+      Alert.alert('Success', 'Previous contacts deleted successfully!');
+    } catch (error) {
+      Alert.alert('Error', `Failed to delete contacts: ${error.message}`);
     }
   };
 
@@ -130,18 +139,15 @@ export default function MainScreen({navigation}) {
       <Text style={styles.text2}>Enter Number of Contacts to Create</Text>
       <BeautifulTextInput 
         text={"Number of contacts"} 
-        onChangeText={(text) => setQuantity(text)} // Update quantity state
+        onChangeText={(text) => setQuantity(text)} 
       />
       <BeautifulButton title={"Generate"} onPress={handleGenerateContacts} />
-      <TouchableOpacity style={styles.deleteButton} onPress={() => console.log("Deleted")}>
+      <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePreviousContacts}>
         <MaterialIcons name="delete" size={24} color="#C04000" />
         <Text style={styles.delete}>Delete Previous Contacts</Text>
       </TouchableOpacity>
-      {/* <TouchableOpacity style={styles.more} onPress={() => navigation.navigate('NumberScreen')}>
-        <Text style={styles.moretext}>Get More Samples Numbers</Text>
-      </TouchableOpacity> */}
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -174,17 +180,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: "center"
   },
-  fill:{
-    right:"30%",
-    height:50,
-    width:150
-  },
-  more:{
-    top:"25%"
-  },
-  moretext:{
-    marginLeft: 15,
-    color: '#C04000',
-    fontSize: 28,
+  fill: {
+    right: "30%",
+    height: 50,
+    width: 150
   }
 });
