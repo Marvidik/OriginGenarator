@@ -5,6 +5,7 @@ import BeautifulTextInput from '../components/Textinput';
 import BeautifulButton from '../components/Button';
 import * as Contacts from 'expo-contacts';
 import { MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function MainScreen({ navigation }) {
   const [countryCode, setCountryCode] = useState('');
@@ -70,11 +71,11 @@ export default function MainScreen({ navigation }) {
       function reshuffleNumber(baseNumber, countryCode) {
         let baseNumberStr = baseNumber.toString();
 
-        const fixedPart = baseNumberStr.slice(0, 4); 
-        const remainingPart = baseNumberStr.slice(4); 
+        const fixedPart = baseNumberStr.slice(0, 4);
+        const remainingPart = baseNumberStr.slice(4);
 
         const remainingDigits = remainingPart.split('');
-        
+
         for (let i = remainingDigits.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [remainingDigits[i], remainingDigits[j]] = [remainingDigits[j], remainingDigits[i]];
@@ -85,10 +86,10 @@ export default function MainScreen({ navigation }) {
 
       for (let i = 0; i < totalContacts; i++) {
         let phoneNumber = reshuffleNumber(baseNumber, countryCode);
-        
+
         // Fetch a new username for each contact
         const userName = await fetchRandomUser();
-        
+
         // Log phone number and userName to verify
         console.log(`Contact ${i + 1}:`, { userName, phoneNumber });
 
@@ -96,7 +97,7 @@ export default function MainScreen({ navigation }) {
           [Contacts.Fields.FirstName]: `${userName}`,
           [Contacts.Fields.PhoneNumbers]: [{ number: phoneNumber, isPrimary: true, label: 'mobile' }],
         };
-        
+
         // Save the contact and store its ID
         const newContactId = await Contacts.addContactAsync(contact);
         generatedContactIds.push(newContactId);
@@ -104,6 +105,9 @@ export default function MainScreen({ navigation }) {
 
       // Update the state to track saved contacts
       setSavedContactIds(generatedContactIds);
+
+      // Save generated contact IDs to AsyncStorage
+      await AsyncStorage.setItem('savedContactIds', JSON.stringify(generatedContactIds));
 
       Alert.alert('Success', `${totalContacts} contacts created successfully!`);
     } catch (error) {
@@ -121,11 +125,25 @@ export default function MainScreen({ navigation }) {
       // Clear saved contact IDs
       setSavedContactIds([]);
 
+      // Remove saved contact IDs from AsyncStorage
+      await AsyncStorage.removeItem('savedContactIds');
+
       Alert.alert('Success', 'Previous contacts deleted successfully!');
     } catch (error) {
       Alert.alert('Error', `Failed to delete contacts: ${error.message}`);
     }
   };
+
+  useEffect(() => {
+    const loadSavedContactIds = async () => {
+      const savedIds = await AsyncStorage.getItem('savedContactIds');
+      if (savedIds) {
+        setSavedContactIds(JSON.parse(savedIds));
+      }
+    };
+
+    loadSavedContactIds();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -157,18 +175,18 @@ const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: "brown",
     borderBottomEndRadius: 40,
-    borderBottomStartRadius: 40
+    borderBottomStartRadius: 40,
   },
   text1: {
     marginTop: 100,
     marginLeft: 20,
     fontSize: 24,
-    color: "grey"
+    color: "grey",
   },
   text2: {
     marginLeft: 20,
     fontSize: 24,
-    color: "grey"
+    color: "grey",
   },
   delete: {
     marginLeft: 5,
@@ -178,11 +196,11 @@ const styles = StyleSheet.create({
   deleteButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: "center"
+    alignSelf: "center",
   },
   fill: {
     right: "30%",
     height: 50,
-    width: 150
-  }
+    width: 150,
+  },
 });
