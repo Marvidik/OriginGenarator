@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import TwoTextFields from '../components/Countryphone';
 import BeautifulTextInput from '../components/Textinput';
@@ -11,7 +11,8 @@ export default function MainScreen({ navigation }) {
   const [countryCode, setCountryCode] = useState('');
   const [baseNumber, setBaseNumber] = useState('');
   const [quantity, setQuantity] = useState('');
-  const [savedContactIds, setSavedContactIds] = useState([]); // Store generated contact IDs here
+  const [savedContactIds, setSavedContactIds] = useState([]);
+  const [isLoading, setIsLoading] = useState(false); // Loading state
 
   async function fetchRandomUser() {
     try {
@@ -36,19 +37,17 @@ export default function MainScreen({ navigation }) {
   }
 
   const isNumeric = (value) => {
-    return /^\d+$/.test(value); // Regular expression to check if a string contains only numbers
+    return /^\d+$/.test(value);
   };
 
   const handleGenerateContacts = async () => {
     const totalContacts = parseInt(quantity);
 
-    // Validate input
     if (!isNumeric(countryCode) || !isNumeric(baseNumber) || isNaN(totalContacts) || totalContacts < 1) {
       Alert.alert('Error', 'Please enter valid numeric inputs.');
       return;
     }
 
-    // Request permission for contacts
     const { status } = await Contacts.requestPermissionsAsync();
 
     if (status !== 'granted') {
@@ -64,13 +63,13 @@ export default function MainScreen({ navigation }) {
       }
     }
 
+    setIsLoading(true); // Start loading
+
     try {
       const generatedContactIds = [];
 
-      // Function to reshuffle the phone number
       function reshuffleNumber(baseNumber, countryCode) {
         let baseNumberStr = baseNumber.toString();
-
         const fixedPart = baseNumberStr.slice(0, 4);
         const remainingPart = baseNumberStr.slice(4);
 
@@ -86,48 +85,36 @@ export default function MainScreen({ navigation }) {
 
       for (let i = 0; i < totalContacts; i++) {
         let phoneNumber = reshuffleNumber(baseNumber, countryCode);
-
-        // Fetch a new username for each contact
         const userName = await fetchRandomUser();
-
-        // Log phone number and userName to verify
-        console.log(`Contact ${i + 1}:`, { userName, phoneNumber });
 
         const contact = {
           [Contacts.Fields.FirstName]: `${userName}`,
           [Contacts.Fields.PhoneNumbers]: [{ number: phoneNumber, isPrimary: true, label: 'mobile' }],
         };
 
-        // Save the contact and store its ID
         const newContactId = await Contacts.addContactAsync(contact);
         generatedContactIds.push(newContactId);
       }
 
-      // Update the state to track saved contacts
       setSavedContactIds(generatedContactIds);
-
-      // Save generated contact IDs to AsyncStorage
       await AsyncStorage.setItem('savedContactIds', JSON.stringify(generatedContactIds));
 
       Alert.alert('Success', `${totalContacts} contacts created successfully!`);
     } catch (error) {
       Alert.alert('Error', `Failed to save contact: ${error.message}`);
+    } finally {
+      setIsLoading(false); // Stop loading
     }
   };
 
   const handleDeletePreviousContacts = async () => {
     try {
-      // Loop through saved contact IDs and delete each contact
       for (let contactId of savedContactIds) {
         await Contacts.removeContactAsync(contactId);
       }
 
-      // Clear saved contact IDs
       setSavedContactIds([]);
-
-      // Remove saved contact IDs from AsyncStorage
       await AsyncStorage.removeItem('savedContactIds');
-
       Alert.alert('Success', 'Previous contacts deleted successfully!');
     } catch (error) {
       Alert.alert('Error', `Failed to delete contacts: ${error.message}`);
@@ -160,6 +147,15 @@ export default function MainScreen({ navigation }) {
         onChangeText={(text) => setQuantity(text)} 
       />
       <BeautifulButton title={"Generate"} onPress={handleGenerateContacts} />
+
+      {/* Loading indicator */}
+      {isLoading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="brown" />
+          <Text style={styles.loadingText}>Generating contacts...</Text>
+        </View>
+      )}
+
       <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePreviousContacts}>
         <MaterialIcons name="delete" size={24} color="#C04000" />
         <Text style={styles.delete}>Delete Previous Contacts</Text>
@@ -202,5 +198,15 @@ const styles = StyleSheet.create({
     right: "30%",
     height: 50,
     width: 150,
+  },
+  loadingContainer: {
+    marginTop: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 18,
+    color: 'brown',
   },
 });
