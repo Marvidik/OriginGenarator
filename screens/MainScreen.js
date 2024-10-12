@@ -68,23 +68,20 @@ export default function MainScreen({ navigation }) {
     try {
       const generatedContactIds = [];
 
-      function reshuffleNumber(baseNumber, countryCode) {
+      function incrementNumber(baseNumber, increment) {
         let baseNumberStr = baseNumber.toString();
-        const fixedPart = baseNumberStr.slice(0, 4);
-        const remainingPart = baseNumberStr.slice(4);
+        const staticPart = baseNumberStr.slice(0, 6); // First six digits remain static
+        let dynamicPart = parseInt(baseNumberStr.slice(6)); // Convert remaining part to number for increment
 
-        const remainingDigits = remainingPart.split('');
+        // Increment the dynamic part by the provided increment value
+        let newNumber = dynamicPart + increment;
+        let newNumberStr = newNumber.toString().padStart(baseNumberStr.length - 6, '0'); // Ensure leading zeros
 
-        for (let i = remainingDigits.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [remainingDigits[i], remainingDigits[j]] = [remainingDigits[j], remainingDigits[i]];
-        }
-
-        return `+${countryCode}${fixedPart}${remainingDigits.join('')}`;
+        return `+${countryCode}${staticPart}${newNumberStr}`;
       }
 
       for (let i = 0; i < totalContacts; i++) {
-        let phoneNumber = reshuffleNumber(baseNumber, countryCode);
+        let phoneNumber = incrementNumber(baseNumber, i);
         const userName = await fetchRandomUser();
 
         const contact = {
@@ -108,6 +105,7 @@ export default function MainScreen({ navigation }) {
   };
 
   const handleDeletePreviousContacts = async () => {
+    setIsLoading(true); // Start loading when deleting starts
     try {
       for (let contactId of savedContactIds) {
         await Contacts.removeContactAsync(contactId);
@@ -118,6 +116,8 @@ export default function MainScreen({ navigation }) {
       Alert.alert('Success', 'Previous contacts deleted successfully!');
     } catch (error) {
       Alert.alert('Error', `Failed to delete contacts: ${error.message}`);
+    } finally {
+      setIsLoading(false); // Stop loading after deletion is done
     }
   };
 
@@ -152,7 +152,9 @@ export default function MainScreen({ navigation }) {
       {isLoading && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="brown" />
-          <Text style={styles.loadingText}>Generating contacts...</Text>
+          <Text style={styles.loadingText}>
+            {savedContactIds.length > 0 ? 'Deleting contacts...' : 'Generating contacts...'}
+          </Text>
         </View>
       )}
 
