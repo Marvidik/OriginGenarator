@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, ActivityIndicator, Dimensions, SafeAreaView } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import TwoTextFields from '../components/Countryphone';
 import BeautifulTextInput from '../components/Textinput';
@@ -6,6 +6,8 @@ import BeautifulButton from '../components/Button';
 import * as Contacts from 'expo-contacts';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const { width, height } = Dimensions.get('window');
 
 export default function MainScreen({ navigation }) {
   const [countryCode, setCountryCode] = useState('');
@@ -133,63 +135,71 @@ export default function MainScreen({ navigation }) {
   }, []);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.up}></View>
-      <Text style={styles.text1}>Enter Country Code and Phone Number...</Text>
-      <BeautifulButton style={styles.fill} title={"Get Random"} onPress={() => navigation.navigate('NumberScreen')} />
-      <TwoTextFields 
-        onCountryCodeChange={(text) => setCountryCode(text)} 
-        onPhoneNumberChange={(text) => setBaseNumber(text)} 
-      />
-      <Text style={styles.text2}>Enter Number of Contacts to Create</Text>
-      <BeautifulTextInput 
-        text={"Number of contacts"} 
-        onChangeText={(text) => setQuantity(text)} 
-      />
-      <BeautifulButton title={"Generate"} onPress={handleGenerateContacts} />
+    <SafeAreaView style={styles.safeContainer}>
+      <View style={styles.container}>
+        <View style={styles.up}></View>
+        <Text style={styles.text1}>Enter Country Code and Phone Number...</Text>
+        <BeautifulButton style={styles.fill} title={"Get Random"} onPress={() => navigation.navigate('NumberScreen')} />
+        <TwoTextFields 
+          onCountryCodeChange={(text) => setCountryCode(text)} 
+          onPhoneNumberChange={(text) => setBaseNumber(text)} 
+        />
+        <Text style={styles.text2}>Enter Number of Contacts to Create</Text>
+        <BeautifulTextInput 
+          text={"Number of contacts"} 
+          onChangeText={(text) => setQuantity(text)} 
+        />
+        <BeautifulButton title={"Generate"} onPress={handleGenerateContacts} />
 
-      {/* Loading indicator */}
-      {isLoading && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="brown" />
-          <Text style={styles.loadingText}>
-            {savedContactIds.length > 0 ? 'Deleting contacts...' : 'Generating contacts...'}
-          </Text>
-        </View>
-      )}
+        {/* Loading indicator */}
+        {isLoading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="brown" />
+            <Text style={styles.loadingText}>
+              {savedContactIds.length > 0 ? 'Deleting contacts...' : 'Generating contacts...'}
+            </Text>
+          </View>
+        )}
 
-      <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePreviousContacts}>
-        <MaterialIcons name="delete" size={24} color="#C04000" />
-        <Text style={styles.delete}>Delete Previous Contacts</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePreviousContacts}>
+          <MaterialIcons name="delete" size={24} color="#C04000" />
+          <Text style={styles.delete}>Delete Previous Contacts</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  safeContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  container: { 
+    flex: 1,
+    padding: width * 0.05,  // Use percentage-based padding for consistency
+  },
   up: {
-    height: 100,
+    height: height * 0.12,  // Responsive height
     width: "100%",
     backgroundColor: "brown",
-    borderBottomEndRadius: 40,
-    borderBottomStartRadius: 40,
+   
   },
   text1: {
-    marginTop: 100,
-    marginLeft: 20,
-    fontSize: 24,
+    marginTop: height * 0.05,  // Responsive top margin
+    marginLeft: width * 0.05,
+    fontSize: width * 0.06,  // Responsive font size
     color: "grey",
   },
   text2: {
-    marginLeft: 20,
-    fontSize: 24,
+    marginLeft: width * 0.05,
+    fontSize: width * 0.06,
     color: "grey",
   },
   delete: {
     marginLeft: 5,
     color: '#C04000',
-    fontSize: 20,
+    fontSize: width * 0.05,  // Responsive font size
   },
   deleteButton: {
     flexDirection: 'row',
@@ -197,18 +207,18 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   fill: {
-    right: "30%",
-    height: 50,
-    width: 150,
+    right: width * 0.3,
+    height: height * 0.06,
+    width: width * 0.4,  // Adjust button width
   },
   loadingContainer: {
-    marginTop: 20,
+    marginTop: height * 0.02,
     justifyContent: 'center',
     alignItems: 'center',
   },
   loadingText: {
-    marginTop: 10,
-    fontSize: 18,
+    marginTop: height * 0.01,
+    fontSize: width * 0.05,
     color: 'brown',
   },
 });

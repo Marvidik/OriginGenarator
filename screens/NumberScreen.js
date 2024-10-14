@@ -1,9 +1,11 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
 import React, { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import BeautifulButton from '../components/Button';
 import * as Clipboard from 'expo-clipboard';
 import { Picker } from '@react-native-picker/picker';
+
+const { width, height } = Dimensions.get('window'); // Get screen dimensions
 
 export default function NumberScreen() {
   const [numbers, setNumbers] = useState([]);
@@ -72,22 +74,14 @@ export default function NumberScreen() {
     setLoading(true);
     try {
       const response = await fetch(`https://geneator.pythonanywhere.com/numbers/${selectedState}`);
-      
-      // Log the response status and content for debugging
-      console.log('Response status:', response.status);
-      
       const data = await response.json();
-      console.log('Fetched data:', data);  // Log the data received
-
       if (data.phone_numbers && Array.isArray(data.phone_numbers)) {
         setNumbers(data.phone_numbers);
       } else {
-        console.log('No valid phone numbers found');
-        setNumbers([]); // Set to empty array if no phone numbers are found
+        setNumbers([]);
         Alert.alert('Error', 'No numbers found for this state.');
       }
     } catch (error) {
-      console.error('Error fetching numbers:', error);  // Log the error if any
       Alert.alert('Error', 'Failed to load numbers. Please try again.');
     } finally {
       setLoading(false);
@@ -143,44 +137,45 @@ export default function NumberScreen() {
 const styles = StyleSheet.create({
   content: {
     flex: 1,
-    paddingTop: 50,
-    paddingHorizontal: 20,
+    paddingTop: height * 0.05,
+    paddingHorizontal: width * 0.05,
+    backgroundColor: '#f9f9f9',
   },
   scrollContent: {
-    paddingBottom: 30,
+    paddingBottom: height * 0.05,
   },
   numbers: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingBottom: 20,
+    paddingBottom: height * 0.03,
   },
   num: {
-    fontSize: 24,
+    fontSize: width * 0.06,
     color: "grey",
   },
   info: {
-    paddingBottom: 20,
-    fontSize: 22,
+    paddingBottom: height * 0.02,
+    fontSize: width * 0.055,
     color: "#C04000",
     textAlign: "center",
   },
   copyButton: {
-    paddingHorizontal: 10,
+    paddingHorizontal: width * 0.02,
   },
   fill: {
     alignSelf: "center",
-    marginTop: 20,
+    marginTop: height * 0.03,
   },
   pickerContainer: {
     borderWidth: 1,
     borderColor: '#C04000',
     borderRadius: 5,
-    marginBottom: 20,
+    marginBottom: height * 0.02,
     backgroundColor: '#fff',
   },
   picker: {
-    height: 50,
+    height: height * 0.07,
     width: '100%',
   },
 });
